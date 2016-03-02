@@ -1,12 +1,9 @@
-node.set["apache"]["user"]  = "vagrant"
-node.set["apache"]["group"] = "vagrant"
+default['postgres']['user']                    = "postgres"
+default['postgres']['group']                   = "postgres"
+default['postgres']['service']                 = "postgres"
 
-node.set['mysql']['server_root_password']   = "root"
-node.set['mysql']['server_debian_password'] = "root"
-node.set['mysql']['server_repl_password']   = "root"
-
-node.set['mysql']['bind_address']      = node[:app][:ip]
-node.set['mysql']['allow_remote_root'] = "1";
+# Start Postgres service on installation
+default['postgres']['start_service']           = true
 
 include_recipe "apt"
 include_recipe "networking_basic"
@@ -17,16 +14,11 @@ execute "add-apt-repository ppa:zanfur/php5.5"
 execute "/usr/bin/apt-get update"
 
 include_recipe "php"
-include_recipe "apache2"
-include_recipe "apache2::mod_rewrite"
-include_recipe "apache2::mod_ssl"
-include_recipe "apache2::mod_headers"
-include_recipe "apache2::mod_expires"
-include_recipe "apache2::mod_php5"
-include_recipe "apache2::mod_deflate"
-include_recipe "apache2::mod_filter"
-include_recipe "mysql"
-include_recipe "mysql::server"
+include_recipe "build-essential::default"
+include_recipe "ohai"
+include_recipe "nginx"
+include_recipe "postgres::client"
+include_recipe "postgres::server"
 include_recipe "composer"
 
 package "git-core"
@@ -57,23 +49,6 @@ php_pear "xdebug" do
   action :install
 end
 
-git "cphalcon" do
-  repository "git://github.com/phalcon/cphalcon.git"
-end
-
-execute "compile cphalcon" do
-  command "./install"
-  cwd "/cphalcon/build"
-  notifies :restart, "service[apache2]"
-end
-
-# gem_package "less"
-# gem_package "sass"
-# gem_package "compass"
-
-execute "/bin/rm /etc/apache2/sites-enabled/* -Rf"
-execute "/bin/rm /etc/apache2/sites-available/* -Rf"
-
 node[:app][:web_apps].each do |identifier, app|
   web_app identifier do
     server_name app[:server_name]
@@ -89,21 +64,3 @@ template "#{node['php']['ext_conf_dir']}/xdebug.ini" do
   group "root"
   mode "0644"
 end
-
-template "#{node['php']['ext_conf_dir']}/cphalcon.ini" do
-  source "cphalcon.ini.erb"
-  owner "root"
-  group "root"
-  mode "0644"
-end
-
-template "#{node['php']['ext_conf_dir']}/opcache.ini" do
-  source "opcache.ini.erb"
-  owner "root"
-  group "root"
-  mode "0644"
-end
-
-execute "/bin/rm /usr/bin/phalcon -Rf"
-execute "/bin/ln -s /vagrant/www/phalcon/phalcon.php /usr/bin/phalcon"
-execute "/bin/chmod ugo+x /usr/bin/phalcon"
