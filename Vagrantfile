@@ -6,7 +6,7 @@ guest_project_folder = "/vagrant/www"
 
 web_apps = {
   "localhost" => {
-    "host_project_folder"  => "../../www",
+    "host_project_folder"  => "www",
     "guest_docroot"        => "/vagrant/www",
     "guest_project_folder" => "/vagrant/www",
     "server_name"          => "localhost",
@@ -16,8 +16,8 @@ web_apps = {
 }
 
 Vagrant.configure("2") do |config|
-  config.vm.box     = "App.Precise64.Php5"
-  config.vm.box_url = "http://files.vagrantup.com/precise64.box"
+  config.vm.box     = "App.Precise32.Php5"
+  config.vm.box_url = "http://files.vagrantup.com/precise32.box"
 
   config.vm.network :forwarded_port, guest: 80, host: 80
   config.vm.network :forwarded_port, guest: 3306, host: 3306
