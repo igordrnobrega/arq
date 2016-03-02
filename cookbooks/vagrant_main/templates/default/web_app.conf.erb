@@ -1,0 +1,27 @@
+<VirtualHost *:80>
+  SetEnv APPLICATION_ENV development
+
+  RewriteEngine On
+
+  ServerName <%= @params[:server_name] %>
+  ServerAlias <% @params[:server_aliases].each do |a| %><%= "#{a}" %> <% end %>
+  DocumentRoot <%= @params[:docroot] %>
+
+  LogLevel debug
+  ErrorLog <%= node[:apache][:log_dir] %>/<%= @params[:name] %>-error.log
+  CustomLog <%= node[:apache][:log_dir] %>/<%= @params[:name] %>-access.log combined
+
+  <Directory <%= @params[:docroot] %>>
+      DirectoryIndex index.php index.html index.htm
+      Options FollowSymLinks
+      AllowOverride All
+      Order Allow,Deny
+      Allow from All
+  </Directory>
+
+  #php_value date.timezone <%= @params[:php_timezone] %>
+
+  <Directory <%= @params[:docroot] %>>
+    #php_admin_value upload_tmp_dir /tmp/<%= @params[:server_name] %>
+  </Directory>
+</VirtualHost>
